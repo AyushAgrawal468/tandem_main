@@ -1,0 +1,43 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: api-gateway
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      routes:
+        - id: chat-service
+          uri: lb://chat-service
+          predicates:
+            - Path=/chat/**
+        - id: otp-auth-service-auth
+          uri: lb://otp-auth-service
+          predicates:
+            - Path=/auth/**
+        - id: otp-auth-service-user
+          uri: lb://otp-auth-service
+          predicates:
+            - Path=/user/**
+        - id: service-registry
+          uri: lb://service-registry
+          predicates:
+            - Path=/registry/**
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+  instance:
+    prefer-ip-address: true
+
+frontend:
+  secret: 402e59a9-38ee-4948-a660-92ea0ab09bda
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    reactor.netty.http.client: DEBUG

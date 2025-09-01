@@ -1,0 +1,133 @@
+package com.tandem.otp_auth_service.entity;
+
+import com.tandem.otp_auth_service.utility.IdGenerator;
+import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "user_packages")
+public class UserPackages {
+
+    @PrePersist
+    public void prePersist() {
+        if (this.userPackageId == null) {
+            this.userPackageId = IdGenerator.generateRandomId(12);
+        }
+        if (this.creationDate == null) {
+            this.creationDate = LocalDateTime.now();
+        }
+
+        this.modifiedDate = LocalDateTime.now();
+    }
+
+    @Id
+    @Column(name = "user_package_id")
+    private String userPackageId;
+
+    @Column(name = "user_id")
+    private String userId;
+
+    @Column(name = "loc_permission")
+    private Boolean locPermission;  //Y/N
+
+    @Column(name = "notif_permission")
+    private Boolean notifPermission; //Y/N
+
+    @Column(name = "package_type")
+    private String packageType;   //free, pro, premium
+
+    @Column(name = "package_status")
+    private String packageStatus; //active/inactive
+
+    @Column(name = "package_months")
+    private String packageMonths; //1, 3, 6, 12
+
+    @Column(name = "on_boarding_status")
+    private String onBoardingStatus; //0,1,2,3,4..
+
+    @Column(name = "creation_date")
+    private LocalDateTime creationDate;
+
+    @Column(name = "modified_date")
+    private LocalDateTime modifiedDate;
+
+    public UserPackages(){
+
+    }
+    public String getUserPackageId() {
+        return userPackageId;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    public Boolean getLocPermission() {
+        return locPermission;
+    }
+
+    public void setLocPermission(Boolean locPermission) {
+        this.locPermission = locPermission;
+    }
+
+    public Boolean getNotifPermission() {
+        return notifPermission;
+    }
+
+    public void setNotifPermission(Boolean notifPermission) {
+        this.notifPermission = notifPermission;
+    }
+
+    public String getPackageType() {
+        return packageType;
+    }
+
+    public void setPackageType(String packageType) {
+        this.packageType = packageType;
+    }
+
+    public String getPackageStatus() {
+        return packageStatus;
+    }
+
+    public void setPackageStatus(String packageStatus) {
+        this.packageStatus = packageStatus;
+    }
+
+    public String getPackageMonths() {
+        return packageMonths;
+    }
+
+    public void setPackageMonths(String packageMonths) {
+        this.packageMonths = packageMonths;
+    }
+
+    public String getOnBoardingStatus() {
+        return onBoardingStatus;
+    }
+
+    public void setOnBoardingStatus(String onBoardingStatus) {
+        this.onBoardingStatus = onBoardingStatus;
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public LocalDateTime getModifiedDate() {
+        return modifiedDate;
+    }
+
+    public void setModifiedDate(LocalDateTime modifiedDate) {
+        this.modifiedDate = modifiedDate;
+    }
+}

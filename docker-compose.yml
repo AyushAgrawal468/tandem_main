@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: tandem_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-tandem_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tandem_pass}
+      POSTGRES_DB: ${POSTGRES_DB:-tandem_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - otp_net
+
+  otp-auth-service:
+    build:
+      context: ./otp-auth-service
+    container_name: otp_auth_service
+    restart: always
+    depends_on:
+      - postgres
+      - service-registry
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-tandem_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-tandem_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-tandem_pass}
+    ports:
+      - "8081:8081"
+    networks:
+      - otp_net
+
+  service-registry:
+    build:
+      context: ./service-registry
+    container_name: service_registry
+    restart: always
+    ports:
+      - "8761:8761"
+    networks:
+      - otp_net
+
+volumes:
+  pgdata:
+
+networks:
+  otp_net:
