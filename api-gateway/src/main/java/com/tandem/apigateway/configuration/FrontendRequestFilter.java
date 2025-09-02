@@ -27,9 +27,16 @@ public class FrontendRequestFilter implements WebFilter {
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        String path = exchange.getRequest().getPath().value();
+
+        // Skip filter for Eureka endpoints
+//        if (path.startsWith("/eureka")) {
+//            return chain.filter(exchange);
+//        }
+
         String header = exchange.getRequest().getHeaders().getFirst("X-Frontend-Secret");
 
-        if (header == null || !header.equals(frontendSecret)) {
+        if (!path.startsWith("/eureka") && (header == null || !header.equals(frontendSecret))) {
             exchange.getResponse().setStatusCode(HttpStatus.FORBIDDEN);
             exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
             String body = "{\"error\":\"Forbidden: Invalid or missing X-Frontend-Secret\"}";

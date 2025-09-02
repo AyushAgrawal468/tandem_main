@@ -8,6 +8,10 @@ spring:
   cloud:
     gateway:
       routes:
+        - id: eureka-dashboard
+          uri: lb://service-registry
+          predicates:
+            - Path=/eureka/**
         - id: chat-service
           uri: lb://chat-service
           predicates:

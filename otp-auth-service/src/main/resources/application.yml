@@ -22,7 +22,7 @@ eureka:
 
 twilio:
   accountSid: AC711ed6425115bd47aba23b8454be4819
-  authToken: 49e6737f0e4efbae3d85fc7a5396b670
+  authToken: bf918e75f46f81008cdc87586c1ceca9
   phoneNumber: +18202006835
 
 server:
