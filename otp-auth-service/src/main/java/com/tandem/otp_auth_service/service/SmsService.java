@@ -33,12 +33,12 @@ public class SmsService {
         }
     }
 
-    public void sendOtp(String toPhone, String otp) {
+    public void sendOtp(String toPhone, String otp, String countryCode) {
         try {
             if (accountSid == null || accountSid.isEmpty()) {
                 throw new RuntimeException("Twilio not properly configured - missing credentials");
             }
-
+            toPhone = countryCode+toPhone;
             Message message = Message.creator(
                     new PhoneNumber(toPhone),
                     new PhoneNumber(twilioNumber),

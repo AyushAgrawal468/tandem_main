@@ -38,7 +38,7 @@ public class User {
     private String gender;
     private LocalDateTime creationDate;
     private LocalDateTime lastLogin;
-
+    private String countryCode;
     public User() {
     }
 
@@ -100,5 +100,13 @@ public class User {
 
     public void setGender(String gender) {
         this.gender = gender;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
     }
 }
