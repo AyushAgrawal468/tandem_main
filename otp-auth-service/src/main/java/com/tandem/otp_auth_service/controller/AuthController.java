@@ -139,7 +139,7 @@ public class AuthController {
                     newUserPackage.setPackageType("FREE_PLAN");
                     newUserPackage.setPackageMonths("12");
                     newUserPackage.setPackageStatus("ACTIVE");
-                    newUserPackage.setOnBoardingStatus("0");
+                    newUserPackage.setOnBoardingStatus("1");
                     return newUserPackage;
                 });
 

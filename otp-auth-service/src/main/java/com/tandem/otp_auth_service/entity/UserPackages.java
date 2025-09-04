@@ -52,6 +52,12 @@ public class UserPackages {
     @Column(name = "modified_date")
     private LocalDateTime modifiedDate;
 
+    @Column(name = "contact_permission")
+    private Boolean contactPermission; //Y/N
+
+    @Column(name = "referral_source")
+    private String referralSource;
+
     public UserPackages(){
 
     }
@@ -129,5 +135,21 @@ public class UserPackages {
 
     public void setModifiedDate(LocalDateTime modifiedDate) {
         this.modifiedDate = modifiedDate;
+    }
+
+    public Boolean getContactPermission() {
+        return contactPermission;
+    }
+
+    public void setContactPermission(Boolean contactPermission) {
+        this.contactPermission = contactPermission;
+    }
+
+    public String getReferralSource() {
+        return referralSource;
+    }
+
+    public void setReferralSource(String referralSource) {
+        this.referralSource = referralSource;
     }
 }
