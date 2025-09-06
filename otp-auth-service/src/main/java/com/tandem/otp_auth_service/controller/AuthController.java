@@ -53,7 +53,7 @@ public class AuthController {
 
                 return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
                         "status", "Too many incorrect OTP attempts. Please try again later.",
-                        "statusId", "4"
+                        "statusId", "2"
                 ));
             }else if(blockedUser.getResendOtpCount()>=3 && duration.toMinutes()>30){
                 blockedUserRepository.delete(blockedUser);
@@ -85,17 +85,17 @@ public class AuthController {
             } else if (e.getMessage().contains("Twilio API Error")) {
                 return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
                         "status", "SMS service unavailable",
-                        "message", "5"
+                        "statusId", "5"
                 ));
             } else if (e.getMessage().contains("not properly configured")) {
                 return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
                         "status", "SMS service not configured",
-                        "message", "5"
+                        "statusId", "5"
                 ));
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                         "status", "Failed to send OTP",
-                        "message", "5"
+                        "statusId", "5"
                 ));
             }
         }
@@ -168,7 +168,8 @@ public class AuthController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                         "status", "Invalid or expired OTP",
                         "statusId", "2",
-                        "user_id", null
+                        "user_id", "" +
+                                ""
                 ));
             }
         } catch (Exception e) {
@@ -177,8 +178,8 @@ public class AuthController {
 
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                     "status", "Failed to verify OTP",
-                    "message", "3",
-                    "user_id", null
+                    "statusId", "3",
+                    "user_id", ""
             ));
         }
     }
