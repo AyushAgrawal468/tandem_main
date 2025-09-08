@@ -117,7 +117,6 @@ public class AuthController {
             if (blockedUser!=null){
                 Duration duration = Duration.between(blockedUser.getBlockedAt(), LocalDateTime.now());
                 if (blockedUser.getResendOtpCount()>=3 && duration.toMinutes()<=30){
-
                     return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
                             "status", "Too many incorrect OTP attempts. Please try again later.",
                             "statusId", "2"
@@ -125,6 +124,7 @@ public class AuthController {
                 }else if(blockedUser.getResendOtpCount()>=3 && duration.toMinutes()>30){
                     blockedUserRepository.delete(blockedUser);
                 }
+            }
 
             if (otpService.validateOtp(finalPhone, finalOtp)) {
                 System.out.println("[DEBUG] OTP validation successful for: " + finalPhone);
@@ -167,22 +167,21 @@ public class AuthController {
             } else {
                 System.out.println("[DEBUG] OTP validation failed for: " + finalPhone);
 
-                BlockedUser blockedUser = blockedUserRepository.findByPhoneNo(finalPhone).orElseGet(() -> {
+                BlockedUser blockedUsr = blockedUserRepository.findByPhoneNo(finalPhone).orElseGet(() -> {
                     BlockedUser newBlockedUser = new BlockedUser();
                     newBlockedUser.setPhoneNo(finalPhone);
                     newBlockedUser.setResendOtpCount(0);
                     return newBlockedUser;
                 });
-                blockedUser.setBlockedAt(LocalDateTime.now());
-                blockedUser.setResendOtpCount(blockedUser.getResendOtpCount()+1);
-                blockedUserRepository.save(blockedUser);
+                blockedUsr.setBlockedAt(LocalDateTime.now());
+                blockedUsr.setResendOtpCount(blockedUsr.getResendOtpCount()+1);
+                blockedUserRepository.save(blockedUsr);
                 System.out.println("[DEBUG] Blocked user entry updated for phone: " + finalPhone);
 
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
                         "status", "Invalid or expired OTP",
                         "statusId", "2",
-                        "user_id", "" +
-                                ""
+                        "user_id", ""
                 ));
             }
         } catch (Exception e) {
