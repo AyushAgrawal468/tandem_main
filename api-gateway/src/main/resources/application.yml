@@ -28,6 +28,10 @@ spring:
           uri: lb://service-registry
           predicates:
             - Path=/registry/**
+        - id: otp-auth-service-user
+          uri: lb://otp-auth-service
+          predicates:
+            - Path=/contact/**
 eureka:
   client:
     service-url:

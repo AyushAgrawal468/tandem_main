@@ -43,6 +43,7 @@ public class AuthController {
     public ResponseEntity<?> sendOtp(@RequestBody OtpRequest request) {
         String phone = request.getPhone() != null ? request.getPhone().trim() : null;
         String countryCode = request.getCountryCode() != null ? request.getCountryCode().trim() : null;
+        String appSignature = request.getAppSignature() != null ? request.getAppSignature().trim() : null;
 
         //checking if the user is blocked or not for the wrong otp entry more than 3 times
 
@@ -66,7 +67,7 @@ public class AuthController {
             System.out.println("[DEBUG] OTP generated for phone: " + phone);
             System.out.println("[DEBUG] Generated OTP: " + otp);
 
-            smsService.sendOtp(phone, otp, countryCode);
+            smsService.sendOtp(phone, otp, countryCode, appSignature);
             System.out.println("[DEBUG] OTP sent to: " + phone);
 
             return ResponseEntity.ok().body(Map.of(
@@ -112,6 +113,18 @@ public class AuthController {
             System.out.println("[DEBUG] Verifying OTP for phone: " + finalPhone);
             System.out.println("[DEBUG] Entered OTP: " + finalOtp);
 
+            BlockedUser blockedUser = blockedUserRepository.findByPhoneNo(finalPhone).orElse(null);
+            if (blockedUser!=null){
+                Duration duration = Duration.between(blockedUser.getBlockedAt(), LocalDateTime.now());
+                if (blockedUser.getResendOtpCount()>=3 && duration.toMinutes()<=30){
+
+                    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                            "status", "Too many incorrect OTP attempts. Please try again later.",
+                            "statusId", "2"
+                    ));
+                }else if(blockedUser.getResendOtpCount()>=3 && duration.toMinutes()>30){
+                    blockedUserRepository.delete(blockedUser);
+                }
 
             if (otpService.validateOtp(finalPhone, finalOtp)) {
                 System.out.println("[DEBUG] OTP validation successful for: " + finalPhone);

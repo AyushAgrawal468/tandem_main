@@ -8,6 +8,8 @@ public class OnboardDto {
     private Boolean locPermission;
     private String referralSource;
     private Boolean contactPermission;
+    private Double latitude;
+    private Double longitude;
 
     public OnboardDto() {
     }
@@ -58,5 +60,21 @@ public class OnboardDto {
 
     public void setContactPermission(Boolean contactPermission) {
         this.contactPermission = contactPermission;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

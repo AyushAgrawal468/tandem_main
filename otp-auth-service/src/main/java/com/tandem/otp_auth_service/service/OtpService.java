@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class OtpService {
     private final Map<String, String> otpStorage = new ConcurrentHashMap<>();
+    private final Map<String, Long> otpTimestampStorage = new ConcurrentHashMap<>();
 
     public String generateOtp(String phone) {
         // Trim phone parameter to handle whitespace
@@ -15,11 +16,11 @@ public class OtpService {
 
         String otp = String.valueOf((int)(Math.random() * 9000) + 1000); // 4-digit OTP
         otpStorage.put(phone, otp);
+        otpTimestampStorage.put(phone, System.currentTimeMillis());
 
         // 🔹 Debug logs
         System.out.println("=== OTP GENERATED ===");
         System.out.println("Phone: " + phone + " | OTP: " + otp);
-        System.out.println("Current OTP Storage: " + otpStorage);
 
         return otp;
     }
@@ -36,13 +37,22 @@ public class OtpService {
         otp = otp != null ? otp.trim() : otp;
 
         String storedOtp = otpStorage.get(phone);
+        Long timestamp = otpTimestampStorage.get(phone);
 
-        // 🔹 Debug logs
-        System.out.println("Normalized phone: " + phone);
-        System.out.println("Stored OTP: " + storedOtp);
-        System.out.println("Entered OTP: " + otp);
+        if (storedOtp == null || timestamp == null) {
+            System.out.println("No OTP or timestamp found for phone: " + phone);
+            return false;
+        }
 
-        boolean isValid = otp != null && otp.equals(storedOtp);
+        long currentTime = System.currentTimeMillis();
+        boolean isValid = false;
+        if ((currentTime - timestamp) <= 2 * 60 * 1000 && otp.equals(storedOtp)) {
+            isValid = true;
+        } else if ((currentTime - timestamp) > 2 * 60 * 1000) {
+            System.out.println("OTP expired for phone: " + phone);
+            otpStorage.remove(phone);
+            otpTimestampStorage.remove(phone);
+        }
         System.out.println("Validation Result for phone " + phone + ": " + isValid);
 
         return isValid;
@@ -51,10 +61,10 @@ public class OtpService {
     public void clearOtp(String phone) {
         phone = phone != null ? phone.trim() : phone;
         otpStorage.remove(phone);
+        otpTimestampStorage.remove(phone);
 
         // 🔹 Debug log
         System.out.println("=== OTP CLEARED ===");
         System.out.println("Phone: " + phone);
-        System.out.println("Current OTP Storage: " + otpStorage);
     }
 }

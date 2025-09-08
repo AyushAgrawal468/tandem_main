@@ -133,6 +133,11 @@ public class UserController {
             if (userPackage != null) {
                 if(onboardDto.getLocPermission()!=null && currentStatus==1) {
                     userPackage.setLocPermission(onboardDto.getLocPermission());
+                    if(onboardDto.getLatitude()!=null && onboardDto.getLongitude()!=null){
+                        userPackage.setLatitude(onboardDto.getLatitude());
+                        userPackage.setLongitude(onboardDto.getLongitude());
+                        logger.info("[onboardUser] Updated latitude: {} and longitude: {}", onboardDto.getLatitude(), onboardDto.getLongitude());
+                    }
                     userPackage.setOnBoardingStatus(String.valueOf(currentStatus + 1));
                     logger.info("[onboardUser] Updated locPermission: {}", onboardDto.getLocPermission());
                 }

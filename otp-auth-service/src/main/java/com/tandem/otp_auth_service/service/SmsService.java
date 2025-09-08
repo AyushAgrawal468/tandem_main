@@ -33,7 +33,7 @@ public class SmsService {
         }
     }
 
-    public void sendOtp(String toPhone, String otp, String countryCode) {
+    public void sendOtp(String toPhone, String otp, String countryCode,String appSignature) {
         try {
             if (accountSid == null || accountSid.isEmpty()) {
                 throw new RuntimeException("Twilio not properly configured - missing credentials");
@@ -42,7 +42,7 @@ public class SmsService {
             Message message = Message.creator(
                     new PhoneNumber(toPhone),
                     new PhoneNumber(twilioNumber),
-                    "Your OTP is: " + otp
+                    "Your OTP is: " + otp + ". " + appSignature
             ).create();
 
             System.out.println("SMS sent successfully. Message SID: " + message.getSid());
