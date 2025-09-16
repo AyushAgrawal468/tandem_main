@@ -32,6 +32,8 @@ public class FrontendRequestFilter implements WebFilter {
     @Value("${security.key}")
     private String secretKey;
 
+    Logger logger = LoggerFactory.getLogger(FrontendRequestFilter.class);
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         String path = exchange.getRequest().getPath().value();
@@ -56,7 +58,7 @@ public class FrontendRequestFilter implements WebFilter {
             decryptedSecret = header != null ? (String) AESUtil.decrypt(header, secretKey, String.class) : null;
             isSecretValid = isValid(decryptedSecret);
         }catch (Exception ex){
-            Logger logger = LoggerFactory.getLogger(FrontendRequestFilter.class);
+
             logger.error("Decryption error: ", ex);
         }
 

@@ -11,6 +11,8 @@ import com.tandem.otp_auth_service.repository.UserRepository;
 import com.tandem.otp_auth_service.service.OtpService;
 import com.tandem.otp_auth_service.service.SmsService;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -38,6 +40,8 @@ public class AuthController {
     @Value("${security.key}")
     private String secretKey;
 
+    Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     public AuthController(OtpService otpService, SmsService smsService, UserRepository userRepository) {
         this.otpService = otpService;
         this.smsService = smsService;
@@ -45,10 +49,12 @@ public class AuthController {
     }
 
     @PostMapping("/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody String request) throws Exception {
+    public ResponseEntity<?> sendOtp(@RequestBody String request)  {
+        String phone = null;
+        try {
         OtpRequest otpRequest = otpRequest = AESUtil.decrypt(request, secretKey, OtpRequest.class);
 
-        String phone = otpRequest.getPhone() != null ? otpRequest.getPhone().trim() : null;
+        phone = otpRequest.getPhone() != null ? otpRequest.getPhone().trim() : null;
         String countryCode = otpRequest.getCountryCode() != null ? otpRequest.getCountryCode().trim() : null;
         String appSignature = otpRequest.getAppSignature() != null ? otpRequest.getAppSignature().trim() : null;
 
@@ -69,7 +75,7 @@ public class AuthController {
                 blockedUserRepository.delete(blockedUser);
             }
         }
-        try {
+
             String otp = otpService.generateOtp(phone);
 
             // 🔹 Debug logs
@@ -87,36 +93,35 @@ public class AuthController {
         } catch (Exception e) {
             System.err.println("Error sending OTP to " + phone + ": " + e.getMessage());
             e.printStackTrace();
-
+            Map<String, Object> response = null;
             if (e.getMessage().contains("Twilio Authentication Failed")) {
-                Map<String, Object> response = Map.of(
+                response = Map.of(
                         "status", "SMS service authentication failed",
                         "statusId", "5"
                 );
-                String encryptedResponse = AESUtil.encrypt(response, secretKey);
-                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             } else if (e.getMessage().contains("Twilio API Error")) {
-                Map<String, Object> response = Map.of(
+                response = Map.of(
                         "status", "SMS service unavailable",
                         "statusId", "5"
                 );
-                String encryptedResponse = AESUtil.encrypt(response, secretKey);
-                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             } else if (e.getMessage().contains("not properly configured")) {
-                Map<String, Object> response = Map.of(
+                response = Map.of(
                         "status", "SMS service not configured",
                         "statusId", "5"
                 );
-                String encryptedResponse = AESUtil.encrypt(response, secretKey);
-                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             } else {
-                Map<String, Object> response = Map.of(
+                response = Map.of(
                         "status", "Failed to send OTP",
                         "statusId", "5"
                 );
-                String encryptedResponse = AESUtil.encrypt(response, secretKey);
-                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             }
+            String encryptedResponse = null;
+            try {
+                encryptedResponse = AESUtil.encrypt(response, secretKey);
+            } catch (Exception ex) {
+                logger.error("Encryption error: ", ex);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
         }
     }
 
