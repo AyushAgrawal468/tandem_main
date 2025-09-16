@@ -68,6 +68,15 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.tandemit.security</groupId>
+            <artifactId>crypto-utils</artifactId>
+            <version>1.0.0</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/crypto-utils-1.0.0.jar</systemPath>
+        </dependency>
+
     </dependencies>
 
     <build>

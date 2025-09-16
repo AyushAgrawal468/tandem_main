@@ -27,3 +27,6 @@ twilio:
 
 server:
   port: 8081
+
+security:
+  key: de94bba406d14d40a16abfd50179d6ac

@@ -60,7 +60,7 @@ public class ContactController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<?> getContactsByUserId(@RequestBody String userId) {
+    public ResponseEntity<?> getContactsByUserId(@RequestParam String userId) {
         List<UserContacts> contacts = userContactsRepository.findByUserId(userId);
         List<java.util.Map<String, Object>> result = contacts.stream()
             .map(c -> java.util.Map.of(

@@ -45,6 +45,9 @@ eureka:
 frontend:
   secret: 402e59a9-38ee-4948-a660-92ea0ab09bda
 
+security:
+  key: de94bba406d14d40a16abfd50179d6ac
+
 logging:
   level:
     org.springframework.cloud.gateway: DEBUG

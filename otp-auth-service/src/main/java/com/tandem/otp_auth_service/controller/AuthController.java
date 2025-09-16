@@ -12,9 +12,11 @@ import com.tandem.otp_auth_service.service.OtpService;
 import com.tandem.otp_auth_service.service.SmsService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.tandemit.security.AESUtil;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -33,6 +35,9 @@ public class AuthController {
     @Autowired
     private BlockedUserRepository blockedUserRepository;
 
+    @Value("${security.key}")
+    private String secretKey;
+
     public AuthController(OtpService otpService, SmsService smsService, UserRepository userRepository) {
         this.otpService = otpService;
         this.smsService = smsService;
@@ -40,10 +45,12 @@ public class AuthController {
     }
 
     @PostMapping("/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody OtpRequest request) {
-        String phone = request.getPhone() != null ? request.getPhone().trim() : null;
-        String countryCode = request.getCountryCode() != null ? request.getCountryCode().trim() : null;
-        String appSignature = request.getAppSignature() != null ? request.getAppSignature().trim() : null;
+    public ResponseEntity<?> sendOtp(@RequestBody String request) throws Exception {
+        OtpRequest otpRequest = otpRequest = AESUtil.decrypt(request, secretKey, OtpRequest.class);
+
+        String phone = otpRequest.getPhone() != null ? otpRequest.getPhone().trim() : null;
+        String countryCode = otpRequest.getCountryCode() != null ? otpRequest.getCountryCode().trim() : null;
+        String appSignature = otpRequest.getAppSignature() != null ? otpRequest.getAppSignature().trim() : null;
 
         //checking if the user is blocked or not for the wrong otp entry more than 3 times
 
@@ -52,10 +59,12 @@ public class AuthController {
             Duration duration = Duration.between(blockedUser.getBlockedAt(), LocalDateTime.now());
             if (blockedUser.getResendOtpCount()>=3 && duration.toMinutes()<=30){
 
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                Map<String, Object> response = Map.of(
                         "status", "Too many incorrect OTP attempts. Please try again later.",
                         "statusId", "2"
-                ));
+                );
+                String encryptedResponse = AESUtil.encrypt(response, secretKey);
+                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             }else if(blockedUser.getResendOtpCount()>=3 && duration.toMinutes()>30){
                 blockedUserRepository.delete(blockedUser);
             }
@@ -69,44 +78,56 @@ public class AuthController {
 
             smsService.sendOtp(phone, otp, countryCode, appSignature);
             System.out.println("[DEBUG] OTP sent to: " + phone);
-
-            return ResponseEntity.ok().body(Map.of(
+            Map<String, Object> response = Map.of(
                     "status", "OTP successfully sent",
                     "statusId","1"
-            ));
+            );
+            String encryptedResponse = AESUtil.encrypt(response, secretKey);
+            return ResponseEntity.ok().body(encryptedResponse);
         } catch (Exception e) {
             System.err.println("Error sending OTP to " + phone + ": " + e.getMessage());
             e.printStackTrace();
 
             if (e.getMessage().contains("Twilio Authentication Failed")) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                Map<String, Object> response = Map.of(
                         "status", "SMS service authentication failed",
                         "statusId", "5"
-                ));
+                );
+                String encryptedResponse = AESUtil.encrypt(response, secretKey);
+                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             } else if (e.getMessage().contains("Twilio API Error")) {
-                return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of(
+                Map<String, Object> response = Map.of(
                         "status", "SMS service unavailable",
                         "statusId", "5"
-                ));
+                );
+                String encryptedResponse = AESUtil.encrypt(response, secretKey);
+                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             } else if (e.getMessage().contains("not properly configured")) {
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                Map<String, Object> response = Map.of(
                         "status", "SMS service not configured",
                         "statusId", "5"
-                ));
+                );
+                String encryptedResponse = AESUtil.encrypt(response, secretKey);
+                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             } else {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                Map<String, Object> response = Map.of(
                         "status", "Failed to send OTP",
                         "statusId", "5"
-                ));
+                );
+                String encryptedResponse = AESUtil.encrypt(response, secretKey);
+                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             }
         }
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody OtpVerifyRequest otpVerifyRequest) {
-        String finalPhone = otpVerifyRequest.getPhone() != null ? otpVerifyRequest.getPhone().trim() : null;
-        String finalOtp = otpVerifyRequest.getOtp() != null ? otpVerifyRequest.getOtp().trim() : null;
-        String countryCode = otpVerifyRequest.getCountryCode() != null ? otpVerifyRequest.getCountryCode().trim() : null;
+    public ResponseEntity<?> verifyOtp(@RequestBody String otpVerifyRequest) throws Exception {
+
+        OtpVerifyRequest otpVerifyRequestDecrypted = AESUtil.decrypt(otpVerifyRequest, secretKey, OtpVerifyRequest.class);
+
+        String finalPhone = otpVerifyRequestDecrypted.getPhone() != null ? otpVerifyRequestDecrypted.getPhone().trim() : null;
+        String finalOtp = otpVerifyRequestDecrypted.getOtp() != null ? otpVerifyRequestDecrypted.getOtp().trim() : null;
+        String countryCode = otpVerifyRequestDecrypted.getCountryCode() != null ? otpVerifyRequestDecrypted.getCountryCode().trim() : null;
 
         try {
             // 🔹 Debug logs
@@ -117,7 +138,7 @@ public class AuthController {
             if (blockedUser!=null){
                 Duration duration = Duration.between(blockedUser.getBlockedAt(), LocalDateTime.now());
                 if (blockedUser.getResendOtpCount()>=3 && duration.toMinutes()<=30){
-                    return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of(
+                    return ResponseEntity.status(HttpStatus.OK).body(Map.of(
                             "status", "Too many incorrect OTP attempts. Please try again later.",
                             "statusId", "2"
                     ));
@@ -159,11 +180,14 @@ public class AuthController {
                 userPackagesRepository.save(userPackage);
                 System.out.println("[DEBUG] User package ensured for userId: " + userId);
 
-                return ResponseEntity.ok().body(Map.of(
+                Map<String, Object> response = Map.of(
                         "status", "OTP verified successfully",
                         "statusId", "1",
                         "user_id", user.getUserId() != null ? user.getUserId() : "generated"
-                ));
+                );
+                String encryptedResponse = AESUtil.encrypt(response, secretKey);
+
+                return ResponseEntity.ok().body(encryptedResponse);
             } else {
                 System.out.println("[DEBUG] OTP validation failed for: " + finalPhone);
 
@@ -178,21 +202,27 @@ public class AuthController {
                 blockedUserRepository.save(blockedUsr);
                 System.out.println("[DEBUG] Blocked user entry updated for phone: " + finalPhone);
 
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                Map<String, Object> response = Map.of(
                         "status", "Invalid or expired OTP",
                         "statusId", "2",
                         "user_id", ""
-                ));
+                );
+                String encryptedResponse = AESUtil.encrypt(response, secretKey);
+
+                return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
             }
         } catch (Exception e) {
             System.err.println("Error verifying OTP for " + finalPhone + ": " + e.getMessage());
             e.printStackTrace();
 
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+            Map<String, Object> response = Map.of(
                     "status", "Failed to verify OTP",
                     "statusId", "3",
                     "user_id", ""
-            ));
+            );
+            String encryptedResponse = AESUtil.encrypt(response, secretKey);
+
+            return ResponseEntity.status(HttpStatus.OK).body(encryptedResponse);
         }
     }
 
