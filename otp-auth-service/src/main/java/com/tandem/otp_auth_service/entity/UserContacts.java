@@ -2,7 +2,6 @@ package com.tandem.otp_auth_service.entity;
 
 import com.tandem.otp_auth_service.utility.IdGenerator;
 import jakarta.persistence.*;
-import org.hibernate.annotations.Type;
 
 import java.util.List;
 
@@ -16,10 +15,9 @@ public class UserContacts {
             this.id = IdGenerator.generateRandomId(12);
         }
     }
-
     @Id
-    private String id;  // Removed GenerationType.IDENTITY since it's custom
-
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String id;
     private String userId;
     private String name;
     private String phoneNum;
@@ -27,37 +25,30 @@ public class UserContacts {
     private String address;
     private String organization;
 
-    @Type(type = "list-array")
-    @Column(name = "websites", columnDefinition = "text[]")
+    @ElementCollection
     private List<String> websites;
 
-    @Type(type = "list-array")
-    @Column(name = "social_media", columnDefinition = "text[]")
+    @ElementCollection
     private List<String> socialMedia;
 
-    @Type(type = "list-array")
-    @Column(name = "events", columnDefinition = "text[]")
+    @ElementCollection
     private List<String> events;
 
-    @Type(type = "list-array")
-    @Column(name = "relations", columnDefinition = "text[]")
+    @ElementCollection
     private List<String> relations;
 
     @Column(length = 2000)
     private String notes;
 
-    @Type(type = "list-array")
-    @Column(name = "photos", columnDefinition = "text[]")
+    @ElementCollection
     private List<String> photos;
 
-    public UserContacts() {}
+    public UserContacts() {
+    }
 
-    // Getters & Setters
+    // Getters and setters
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
-
-    public String getUserId() { return userId; }
-    public void setUserId(String userId) { this.userId = userId; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -91,4 +82,12 @@ public class UserContacts {
 
     public List<String> getPhotos() { return photos; }
     public void setPhotos(List<String> photos) { this.photos = photos; }
+
+    public String getUserId() {
+        return userId;
+    }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
 }
+
